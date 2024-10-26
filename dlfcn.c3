@@ -1,16 +1,30 @@
 module dlfcn::dl;
 
-distinct Handle = void*;
-distinct Fun = void*;
+def Handle = void*;
+def Fun = void*;
 
+fault DlfcnFault {
+        SYM_NOT_FOUNDED,
+        FILE_NOT_FOUNDED,
+}
 
 extern fn Handle dlopen(char* file, int flag);
 extern fn char* dlerror();
 extern fn Fun dlsym(Handle h, char* name);
 extern fn int dlclose(Handle h);
 
-fn Handle open(char* file, int flag) => dlopen(file, flag);
-fn Fun Handle.getSymbol(self, char* name) => dlsym(self, name);
+fn Handle! open(char* file, int flag) {
+        Fun ret = dlopen(file, flag);
+        if(ret == null) return DlfcnFault.FILE_NOT_FOUNDED?;
+        return ret;
+}
+
+fn Fun! Handle.getSymbol(self, char* name) {
+        Fun ret = dlsym(self, name);
+        if(ret == null) return DlfcnFault.SYM_NOT_FOUNDED?;
+        return ret;
+}
+
 fn void Handle.close(self) => dlclose(self);
 
 module dlfcn::dl::rtld;
